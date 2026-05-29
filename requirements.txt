@@ -5,3 +5,4 @@ torch
 python-dotenv
 streamlit
 reportlab
+scipy
