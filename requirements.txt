@@ -1,0 +1,7 @@
+requests
+pandas
+numpy
+torch
+python-dotenv
+streamlit
+reportlab
