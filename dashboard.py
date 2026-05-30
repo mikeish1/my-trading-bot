@@ -191,24 +191,22 @@ st.info("💡 Consider increasing position if score stays above 7.5")
 st.divider()
 
 # ═══════════════════════════════════════════════════════════════
-# UFC FIGHT BETTING - NEW SECTION
+# UFC FIGHT BETTING
 # ═══════════════════════════════════════════════════════════════
 st.markdown("### 🥊 UFC Fight Picks")
-
 col1, col2 = st.columns(2)
 with col1:
     ufc_bankroll = st.number_input("Betting Bankroll ($)", value=500, step=50, min_value=50, key="ufc_bankroll")
 with col2:
     ufc_risk = st.select_slider("Risk Level", ["Conservative", "Moderate", "Aggressive"], value="Moderate", key="ufc_risk")
-
 if st.button("🥊 GET UFC PICKS", use_container_width=True, type="primary"):
     with st.spinner("Analyzing fight card..."):
         try:
             from ufc_betting import get_ufc_picks
             ufc_result = get_ufc_picks(bankroll=ufc_bankroll, risk_level=ufc_risk.lower())
-            
+           
             st.success(f"✅ UFC Picks Ready! Expected Profit: +${ufc_result['expected_profit']:.2f}")
-            
+           
             for i, pick in enumerate(ufc_result['recommendations'], 1):
                 st.write(f"**{i}. {pick['pick']}** vs {pick['opponent']}")
                 st.write(f"   Odds: {pick['odds']} | Confidence: {pick['confidence']}% | Edge: {pick['edge']}%")
@@ -217,8 +215,41 @@ if st.button("🥊 GET UFC PICKS", use_container_width=True, type="primary"):
                 st.write("---")
         except Exception as e:
             st.error(f"⚠️ UFC module error: {str(e)}")
-
 st.caption("⚠️ Sports betting involves risk. Gamble responsibly. This is for entertainment/educational purposes only.")
+
+st.divider()
+
+# ═══════════════════════════════════════════════════════════════
+# MLB BASEBALL BETTING - NEW SECTION
+# ═══════════════════════════════════════════════════════════════
+st.markdown("### ⚾ MLB Baseball Picks")
+
+col1, col2 = st.columns(2)
+with col1:
+    mlb_bankroll = st.number_input("MLB Bankroll ($)", value=500, step=50, min_value=50, key="mlb_bankroll")
+with col2:
+    mlb_risk = st.select_slider("Risk Level", ["Conservative", "Moderate", "Aggressive"], value="Moderate", key="mlb_risk")
+
+if st.button("⚾ GET MLB PICKS", use_container_width=True, type="primary"):
+    with st.spinner("Analyzing MLB slate..."):
+        try:
+            from mlb_betting import get_mlb_picks
+            mlb_result = get_mlb_picks(bankroll=mlb_bankroll, risk_level=mlb_risk.lower())
+            
+            st.success(f"✅ MLB Picks Ready! Expected Profit: +${mlb_result['expected_profit']:.2f}")
+            
+            for i, pick in enumerate(mlb_result['recommendations'], 1):
+                st.write(f"**{i}. {pick['game']}** - {pick['bet_type']}")
+                st.write(f"   Pick: {pick['pick']} | Odds: {pick['odds']} | Edge: {pick['edge']}%")
+                st.write(f"   Bet: ${pick['bet_size']:.2f} | Expected Value: +${pick['expected_value']:.2f}")
+                if pick['bet_type'] == 'Moneyline':
+                    st.write(f"   Pitcher: {pick['pitcher']} | Bullpen ERA: {pick['bullpen_era']}")
+                    st.write(f"   Weather: {pick['weather']}")
+                st.write("---")
+        except Exception as e:
+            st.error(f"⚠️ MLB module error: {str(e)}")
+
+st.caption("⚠️ Sports betting involves risk. Gamble responsibly.")
 
 st.divider()
 
