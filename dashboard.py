@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import time
 import sys
 sys.path.insert(0, '/home/workdir/.grok/skills/ultimate-quant-trading-system')
-
 from portfolio_optimizer import optimize_portfolio_for_capital
 
 st.set_page_config(page_title="Trading • Live Dashboard", page_icon="📈", layout="wide")
@@ -82,7 +81,7 @@ with col4:
 st.divider()
 
 # ═══════════════════════════════════════════════════════════════
-# NEW: CAPITAL ALLOCATOR + TOP PROFIT PICKS
+# CAPITAL ALLOCATOR + TOP PROFIT PICKS
 # ═══════════════════════════════════════════════════════════════
 st.markdown("### 💰 Daily Capital Allocator - Top Profit Picks")
 
@@ -119,10 +118,10 @@ if st.button("🚀 OPTIMIZE MY PORTFOLIO", use_container_width=True, type="prima
             st.error(f"⚠️ Optimization error: {str(e)}")
 
 st.divider()
-# ═══════════════════════════════════════════════════════════════
-# END OF NEW SECTION - EXISTING CODE BELOW
-# ═══════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════
+# EXISTING CODE - CURRENT RECOMMENDATION
+# ═══════════════════════════════════════════════════════════════
 st.markdown("### 🎯 Current Recommendation")
 col1, col2 = st.columns([2, 1])
 with col1:
@@ -188,6 +187,38 @@ st.markdown("### 🔔 Smart Alerts")
 st.success("✅ All guardrails passed — Position sizing optimal")
 st.warning("🟡 VIX at 20.0 — Normal conditions, proceed with plan")
 st.info("💡 Consider increasing position if score stays above 7.5")
+
+st.divider()
+
+# ═══════════════════════════════════════════════════════════════
+# UFC FIGHT BETTING - NEW SECTION
+# ═══════════════════════════════════════════════════════════════
+st.markdown("### 🥊 UFC Fight Picks")
+
+col1, col2 = st.columns(2)
+with col1:
+    ufc_bankroll = st.number_input("Betting Bankroll ($)", value=500, step=50, min_value=50, key="ufc_bankroll")
+with col2:
+    ufc_risk = st.select_slider("Risk Level", ["Conservative", "Moderate", "Aggressive"], value="Moderate", key="ufc_risk")
+
+if st.button("🥊 GET UFC PICKS", use_container_width=True, type="primary"):
+    with st.spinner("Analyzing fight card..."):
+        try:
+            from ufc_betting import get_ufc_picks
+            ufc_result = get_ufc_picks(bankroll=ufc_bankroll, risk_level=ufc_risk.lower())
+            
+            st.success(f"✅ UFC Picks Ready! Expected Profit: +${ufc_result['expected_profit']:.2f}")
+            
+            for i, pick in enumerate(ufc_result['recommendations'], 1):
+                st.write(f"**{i}. {pick['pick']}** vs {pick['opponent']}")
+                st.write(f"   Odds: {pick['odds']} | Confidence: {pick['confidence']}% | Edge: {pick['edge']}%")
+                st.write(f"   Bet: ${pick['bet_size']:.2f} | Expected Value: +${pick['expected_value']:.2f}")
+                st.write(f"   Style: {pick['style']} | Record: {pick['record']}")
+                st.write("---")
+        except Exception as e:
+            st.error(f"⚠️ UFC module error: {str(e)}")
+
+st.caption("⚠️ Sports betting involves risk. Gamble responsibly. This is for entertainment/educational purposes only.")
 
 st.divider()
 
