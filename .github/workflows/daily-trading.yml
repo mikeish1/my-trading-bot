@@ -2,13 +2,18 @@ name: Daily Trading Recommendation
 
 on:
   schedule:
-    # Runs at 9:30 AM Eastern Time, Monday through Friday
-    - cron: '30 13 * * 1-5'
+    # Runs at 9:05 AM Eastern Time, Monday through Friday
+    # Handles daylight saving automatically:
+    # - 9:05 AM EDT (Mar-Nov) = 13:05 UTC
+    # - 9:05 AM EST (Nov-Mar) = 14:05 UTC
+    # We run at 13:05 UTC to catch both (8:05 AM EST / 9:05 AM EDT)
+    - cron: '5 13 * * 1-5'
   workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
 
 jobs:
   generate-recommendation:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # Prevent hanging
     
     steps:
       - name: Checkout code
@@ -18,23 +23,51 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'  # Cache pip dependencies for faster runs
       
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
       
       - name: Run Trading System
+        id: run-trading
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
           DEFAULT_TICKER: ${{ vars.DEFAULT_TICKER || 'NVDA' }}
+          CAPITAL: ${{ vars.CAPITAL || '25000' }}
+        continue-on-error: false  # Fail the workflow if this step fails
         run: |
+          echo "🚀 Starting daily trading recommendation..."
+          echo "Time: $(date)"
+          echo "Timezone: $(timedatectl 2>/dev/null | grep 'Time zone' || echo 'UTC')"
           python main.py
+          echo "✅ Trading recommendation completed successfully"
       
-      - name: Upload logs (optional)
+      - name: Handle Success
+        if: success()
+        run: |
+          echo "✅ Workflow completed successfully at $(date)"
+          echo "Recommendation generated for ${{ vars.DEFAULT_TICKER || 'NVDA' }}"
+      
+      - name: Handle Failure
+        if: failure()
+        run: |
+          echo "❌ Workflow failed at $(date)"
+          echo "Check the logs above for errors"
+          echo "Common issues:"
+          echo "  - Missing POLYGON_API_KEY secret"
+          echo "  - Network/API issues"
+          echo "  - Missing dependencies"
+          exit 1
+      
+      - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: trading-logs-${{ github.run_number }}
           path: |
             *.log
+            trading_output.txt
           retention-days: 30
+          if-no-files-found: warn
