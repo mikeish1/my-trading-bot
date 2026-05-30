@@ -15,7 +15,7 @@ from polygon import RESTClient
 # Pre-configured client
 import os
 POLYGON_API_KEY = os.environ.get("POLYGON_API_KEY")
-client = RESTClient(api_key=POLYGON_API_KEY)
+client = RESTClient(api_key="DEMO")
 
 def fetch_historical_bars(tickers, days=90, multiplier=1, timespan="day", max_retries=3):
     """
