@@ -1,0 +1,40 @@
+name: Daily Trading Recommendation
+
+on:
+  schedule:
+    # Runs at 9:30 AM Eastern Time, Monday through Friday
+    - cron: '30 13 * * 1-5'
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  generate-recommendation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Run Trading System
+        env:
+          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+          DEFAULT_TICKER: ${{ vars.DEFAULT_TICKER || 'NVDA' }}
+        run: |
+          python main.py
+      
+      - name: Upload logs (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trading-logs-${{ github.run_number }}
+          path: |
+            *.log
+          retention-days: 30
