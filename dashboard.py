@@ -1,6 +1,10 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import time
+import sys
+sys.path.insert(0, '/home/workdir/.grok/skills/ultimate-quant-trading-system')
+
+from portfolio_optimizer import optimize_portfolio_for_capital
 
 st.set_page_config(page_title="Trading • Live Dashboard", page_icon="📈", layout="wide")
 
@@ -76,6 +80,48 @@ with col4:
         st.info("🔧 Settings opened")
 
 st.divider()
+
+# ═══════════════════════════════════════════════════════════════
+# NEW: CAPITAL ALLOCATOR + TOP PROFIT PICKS
+# ═══════════════════════════════════════════════════════════════
+st.markdown("### 💰 Daily Capital Allocator - Top Profit Picks")
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    capital = st.number_input("Available Capital ($)", value=25000, step=1000, min_value=1000, key="capital_input")
+with col2:
+    max_position = st.slider("Max Position Size (%)", 1.0, 5.0, 3.0, 0.5, key="max_pos")
+with col3:
+    risk_tolerance = st.select_slider("Risk Tolerance", ["Conservative", "Moderate", "Aggressive"], value="Moderate", key="risk_tol")
+
+if st.button("🚀 OPTIMIZE MY PORTFOLIO", use_container_width=True, type="primary", key="optimize_btn"):
+    with st.spinner("Analyzing top profit opportunities..."):
+        try:
+            result = optimize_portfolio_for_capital(
+                available_capital=capital,
+                max_position_pct=max_position,
+                risk_tolerance=1.0 if risk_tolerance == "Moderate" else (0.7 if risk_tolerance == "Conservative" else 1.3)
+            )
+            
+            st.success(f"✅ Portfolio Optimized! Expected Return: +{result['expected_portfolio_return_pct']}% (${result['expected_profit_usd']:,.0f})")
+            
+            st.markdown("#### 📊 Recommended Positions (Ranked by Profit Potential)")
+            for i, pos in enumerate(result['positions'], 1):
+                col_a, col_b = st.columns([3, 2])
+                with col_a:
+                    st.write(f"**{i}. {pos['ticker']}** — Score: {pos['score']}/10 | Expected: +{pos['expected_return_pct']}%")
+                    st.write(f"   Allocated: ${pos['allocated_capital']:,.0f} ({pos['allocated_pct']}%)")
+                with col_b:
+                    st.write(f"**EXIT:** Trail -{pos['exit_trailing_stop']}% | Target +{pos['profit_target_1']}% / +{pos['profit_target_2']}%")
+            
+            st.info(f"💵 Cash Reserve: ${result['cash_reserve']:,.0f} | Risk Level: {result['risk_level']}")
+        except Exception as e:
+            st.error(f"⚠️ Optimization error: {str(e)}")
+
+st.divider()
+# ═══════════════════════════════════════════════════════════════
+# END OF NEW SECTION - EXISTING CODE BELOW
+# ═══════════════════════════════════════════════════════════════
 
 st.markdown("### 🎯 Current Recommendation")
 col1, col2 = st.columns([2, 1])
